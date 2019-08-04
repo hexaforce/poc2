@@ -5,7 +5,8 @@
 FROM amazoncorretto:8
 COPY ./.aws /root/.aws
 COPY ./.gcp /root/.gcp
-COPY --from=maven /target/poc-0.0.1-SNAPSHOT.jar app.jar
+#COPY --from=maven /target/poc-0.0.1-SNAPSHOT.jar app.jar
+COPY target/poc-0.0.1-SNAPSHOT.jar app.jar
 CMD ["java", "-jar", "app.jar"]
 
 
