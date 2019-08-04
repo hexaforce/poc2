@@ -1,6 +1,7 @@
 package com.example.demo.livemediastreams;
 
-import java.nio.ByteBuffer;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 
@@ -9,13 +10,14 @@ import com.amazonaws.kinesisvideo.parser.mkv.FrameProcessException;
 import com.amazonaws.kinesisvideo.parser.utilities.FragmentMetadata;
 import com.amazonaws.kinesisvideo.parser.utilities.FragmentMetadataVisitor;
 import com.amazonaws.kinesisvideo.parser.utilities.MkvTrackMetadata;
+import com.example.demo.speech2text.STTService;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class LMSFrameProcessor implements com.amazonaws.kinesisvideo.parser.utilities.FrameVisitor.FrameProcessor {
 
-	private volatile BlockingQueue<byte[]> sharedQueue;
+	volatile BlockingQueue<byte[]> sharedQueue;
 
 	protected LMSFrameProcessor(BlockingQueue<byte[]> sharedQueue) {
 		this.sharedQueue = sharedQueue;
@@ -26,27 +28,26 @@ public class LMSFrameProcessor implements com.amazonaws.kinesisvideo.parser.util
 	}
 
 	public void process(Frame frame, MkvTrackMetadata trackMetadata, Optional<FragmentMetadata> fragmentMetadata) throws FrameProcessException {
-		saveSharedQueue(frame);
+		toCloudCpeech(frame);
 	}
 
 	public void process(Frame frame, MkvTrackMetadata trackMetadata, Optional<FragmentMetadata> fragmentMetadata, Optional<FragmentMetadataVisitor.MkvTagProcessor> tagProcessor) throws FrameProcessException {
 		if (tagProcessor.isPresent()) {
-			saveSharedQueue(frame);
+			toCloudCpeech(frame);
 		} else {
 			process(frame, trackMetadata, fragmentMetadata);
 		}
 	}
 
-	private void saveSharedQueue(Frame frame) {
+	private String toCloudCpeech(Frame frame) {
 		try {
-			ByteBuffer frameBuffer = frame.getFrameData();
-			byte[] frameBytes = new byte[frameBuffer.remaining()];
-			frameBuffer.get(frameBytes);
-			sharedQueue.put(frameBytes);
-		} catch (InterruptedException e) {
-			log.error("saveSharedQueue", e);
+			return new STTService(frame.getFrameData()).execute();
+		} catch (FileNotFoundException e) {
+			log.error("toCloudCpeech FileNotFoundException", e);
+		} catch (IOException e) {
+			log.error("toCloudCpeech IOException", e);
 		}
-
+		return null;
 	}
 
 }

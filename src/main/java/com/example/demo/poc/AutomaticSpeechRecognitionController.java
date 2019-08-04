@@ -40,15 +40,10 @@ public class AutomaticSpeechRecognitionController {
 
 			log.info(request.toString());
 			new LMSService(regions, credentials, streamName).execute(fragmentNumber, sharedQueue);
-			
 		} catch (IOException e) {
-			
 			log.error("NaturalLanguageUnderstanding", e);
-			
 		}
-		
 		return new NaturalLanguageUnderstandingResponse("Thanks For Posting!!!");
-		
 	}
 
 }
