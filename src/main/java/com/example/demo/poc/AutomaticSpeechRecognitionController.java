@@ -1,8 +1,6 @@
 package com.example.demo.poc;
 
 import java.io.IOException;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,8 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/poc")
 public class AutomaticSpeechRecognitionController {
 
-	private static volatile BlockingQueue<byte[]> sharedQueue = new LinkedBlockingQueue<byte[]>();
-
 //    @Autowired
 //    ExampleService exampleService;
 
@@ -38,7 +34,7 @@ public class AutomaticSpeechRecognitionController {
 			String fragmentNumber = request.getStartFragmentNumber();
 
 			log.info(request.toString());
-			new LMSService(regions, credentials, streamName).execute(fragmentNumber, sharedQueue);
+			new LMSService(regions, credentials, streamName).execute(fragmentNumber);
 		} catch (IOException e) {
 			log.error("NaturalLanguageUnderstanding", e);
 		}

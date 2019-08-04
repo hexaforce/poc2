@@ -1,7 +1,6 @@
 package com.example.demo.livemediastreams;
 
 import java.io.IOException;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -26,23 +25,12 @@ public class LMSService extends LMSCommon {
 		this.executorService = Executors.newFixedThreadPool(2);
 	}
 
-	public void execute(String fragmentNumber, BlockingQueue<byte[]> sharedQueue) throws IOException {
+	public void execute(String fragmentNumber) throws IOException {
 
-		StartSelector startSelector = new StartSelector()
-				.withStartSelectorType(StartSelectorType.FRAGMENT_NUMBER)
-				.withAfterFragmentNumber(fragmentNumber);
-		
-		FrameVisitor frameVisitor = FrameVisitor.create(LMSFrameProcessor.create(sharedQueue));
+		StartSelector startSelector = new StartSelector().withStartSelectorType(StartSelectorType.FRAGMENT_NUMBER).withAfterFragmentNumber(fragmentNumber);
+		FrameVisitor frameVisitor = FrameVisitor.create(LMSFrameProcessor.create());
+		LMSWorker worker = LMSWorker.create(getRegion(), getCredentialsProvider(), getStreamName(), startSelector, streamOps.getAmazonKinesisVideo(), frameVisitor);
 
-		LMSWorker worker = LMSWorker.create(
-				getRegion(), 
-				getCredentialsProvider(), 
-				getStreamName(), 
-				startSelector, 
-				streamOps.getAmazonKinesisVideo(), 
-				frameVisitor
-			);
-		
 		executorService.submit(worker);
 
 		// Wait for the workers to finish.

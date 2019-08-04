@@ -23,36 +23,30 @@ import com.google.cloud.speech.v1.SpeechSettings;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 public class STTService {
 
 	private final String GCP_CREDENTIALS = "/root/.gcp/hexaforce-867578ab2dff.json";
 	private final ArrayList<String> SCOPED = Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform");
-	
+
 	private final String LANG_CODE = "ja-JP";
 	private final int SAMPLE_RATE = 8000;// 16000;
 
-	private final ByteBuffer buffer;
+	private final byte[] frameBytes;
 	private final SpeechSettings settings;
 
 	public STTService(ByteBuffer buffer) throws FileNotFoundException, IOException {
-		this.buffer = buffer;
+		this.frameBytes = new byte[buffer.remaining()];
+		buffer.get(frameBytes);
 
 		// Cloud Speech-to-Text credentials
 		InputStream file = new FileInputStream(ResourceUtils.getFile(GCP_CREDENTIALS));
 		GoogleCredentials credentials = GoogleCredentials.fromStream(file).createScoped(SCOPED);
 
-		this.settings = SpeechSettings.newBuilder().setCredentialsProvider(FixedCredentialsProvider.create(credentials)).build();
+		FixedCredentialsProvider provider = FixedCredentialsProvider.create(credentials);
+		this.settings = SpeechSettings.newBuilder().setCredentialsProvider(provider).build();
 	}
 
 	public String execute() throws IOException {
-
-		byte[] frameBytes = new byte[buffer.remaining()];
-		buffer.get(frameBytes);
-
-		log.info("frameBytes size {}", frameBytes.length);
 
 		// Instantiates a client
 		try (SpeechClient speechClient = SpeechClient.create(settings)) {
