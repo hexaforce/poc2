@@ -37,7 +37,8 @@ public class AutomaticSpeechRecognitionController {
 			AWSCredentialsProvider credentials = AmazonKinesisVideoClientBuilder.standard().getCredentials();
 			String streamARN = request.getStreamARN();
 			String fragmentNumber = request.getStartFragmentNumber();
-			
+
+			log.info(request.toString());
 			new LMSService(regions, credentials, streamARN).execute(fragmentNumber, sharedQueue);
 			
 		} catch (IOException e) {
@@ -46,7 +47,6 @@ public class AutomaticSpeechRecognitionController {
 			
 		}
 		
-		log.info(request.toString());
 		return new NaturalLanguageUnderstandingResponse("Thanks For Posting!!!");
 		
 	}
