@@ -18,9 +18,8 @@ import com.example.demo.livemediastreams.LMSService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-
-@RequestMapping("/poc")
 @RestController
+@RequestMapping("/poc")
 public class AutomaticSpeechRecognitionController {
 
 	private static volatile BlockingQueue<byte[]> sharedQueue = new LinkedBlockingQueue<byte[]>();
@@ -28,8 +27,8 @@ public class AutomaticSpeechRecognitionController {
 //    @Autowired
 //    ExampleService exampleService;
 
-	@PostMapping("/nul")
 	@ResponseBody
+	@PostMapping("/nul")
 	public NaturalLanguageUnderstandingResponse nul(@RequestBody NaturalLanguageUnderstandingRequest request) {
 		try {
 			

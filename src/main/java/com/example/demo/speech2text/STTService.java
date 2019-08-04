@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.util.ResourceUtils;
@@ -27,6 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class STTService {
 
+	private final String GCP_CREDENTIALS = "/root/.gcp/hexaforce-867578ab2dff.json";
+	private final ArrayList<String> SCOPED = Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform");
+	
 	private final String LANG_CODE = "ja-JP";
 	private final int SAMPLE_RATE = 8000;// 16000;
 
@@ -37,8 +41,8 @@ public class STTService {
 		this.buffer = buffer;
 
 		// Cloud Speech-to-Text credentials
-		InputStream file = new FileInputStream(ResourceUtils.getFile("/home/fedora/poc2/src/main/resources/Credentials.json"));
-		GoogleCredentials credentials = GoogleCredentials.fromStream(file).createScoped(Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform"));
+		InputStream file = new FileInputStream(ResourceUtils.getFile(GCP_CREDENTIALS));
+		GoogleCredentials credentials = GoogleCredentials.fromStream(file).createScoped(SCOPED);
 
 		this.settings = SpeechSettings.newBuilder().setCredentialsProvider(FixedCredentialsProvider.create(credentials)).build();
 	}
