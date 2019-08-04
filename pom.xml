@@ -14,7 +14,7 @@
 	<groupId>io.hexaforce</groupId>
 	<artifactId>poc</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>poc</name>
+	<name>poc2</name>
 	<description>Proof of Concept for AI.</description>
 
 	<properties>

@@ -10,32 +10,45 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.kinesisvideo.AmazonKinesisVideoClientBuilder;
+import com.example.demo.livemediastreams.LMSService;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 
-@RequestMapping("/po")
+@RequestMapping("/poc")
 @RestController
 public class AutomaticSpeechRecognitionController {
 
-	// private static volatile BlockingQueue<byte[]> sharedQueue = new LinkedBlockingQueue<byte[]>();
+	private static volatile BlockingQueue<byte[]> sharedQueue = new LinkedBlockingQueue<byte[]>();
 
 //    @Autowired
 //    ExampleService exampleService;
-    
+
 	@PostMapping("/nul")
 	@ResponseBody
 	public NaturalLanguageUnderstandingResponse nul(@RequestBody NaturalLanguageUnderstandingRequest request) {
-//		try {
-//			new LMSExample(Regions.AP_NORTHEAST_1, AmazonKinesisVideoClientBuilder.standard().getCredentials(), request.getStreamARN()).execute(request.getStartFragmentNumber(), sharedQueue);
-//		} catch (IOException e) {
-//			log.error("NaturalLanguageUnderstanding", e);
-//		}
+		try {
+			
+			Regions regions = Regions.AP_NORTHEAST_1;
+			AWSCredentialsProvider credentials = AmazonKinesisVideoClientBuilder.standard().getCredentials();
+			String streamARN = request.getStreamARN();
+			String fragmentNumber = request.getStartFragmentNumber();
+			
+			new LMSService(regions, credentials, streamARN).execute(fragmentNumber, sharedQueue);
+			
+		} catch (IOException e) {
+			
+			log.error("NaturalLanguageUnderstanding", e);
+			
+		}
+		
 		log.info(request.toString());
 		return new NaturalLanguageUnderstandingResponse("Thanks For Posting!!!");
+		
 	}
 
 }
