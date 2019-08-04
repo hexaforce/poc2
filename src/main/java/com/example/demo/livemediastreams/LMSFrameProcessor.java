@@ -27,11 +27,16 @@ public class LMSFrameProcessor implements com.amazonaws.kinesisvideo.parser.util
 		return new LMSFrameProcessor(sharedQueue);
 	}
 
-	public void process(Frame frame, MkvTrackMetadata trackMetadata, Optional<FragmentMetadata> fragmentMetadata) throws FrameProcessException {
+	public void process(Frame frame, 
+			MkvTrackMetadata trackMetadata, 
+			Optional<FragmentMetadata> fragmentMetadata) throws FrameProcessException {
 		toCloudCpeech(frame);
 	}
 
-	public void process(Frame frame, MkvTrackMetadata trackMetadata, Optional<FragmentMetadata> fragmentMetadata, Optional<FragmentMetadataVisitor.MkvTagProcessor> tagProcessor) throws FrameProcessException {
+	public void process(Frame frame, 
+			MkvTrackMetadata trackMetadata, 
+			Optional<FragmentMetadata> fragmentMetadata, 
+			Optional<FragmentMetadataVisitor.MkvTagProcessor> tagProcessor) throws FrameProcessException {
 		if (tagProcessor.isPresent()) {
 			toCloudCpeech(frame);
 		} else {

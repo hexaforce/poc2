@@ -7,6 +7,8 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.List;
 
+import org.springframework.util.ResourceUtils;
+
 import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.speech.v1.RecognitionAudio;
@@ -26,18 +28,18 @@ import lombok.extern.slf4j.Slf4j;
 public class STTService {
 
 	private final String LANG_CODE = "ja-JP";
-	private final int SAMPLE_RATE = 8000;//16000;
+	private final int SAMPLE_RATE = 8000;// 16000;
 
 	private final ByteBuffer buffer;
 	private final SpeechSettings settings;
 
 	public STTService(ByteBuffer buffer) throws FileNotFoundException, IOException {
 		this.buffer = buffer;
-		
+
 		// Cloud Speech-to-Text credentials
-		InputStream file = new FileInputStream("Credentials.json");
+		InputStream file = new FileInputStream(ResourceUtils.getFile("/home/fedora/poc2/src/main/resources/Credentials.json"));
 		GoogleCredentials credentials = GoogleCredentials.fromStream(file).createScoped(Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform"));
-		
+
 		this.settings = SpeechSettings.newBuilder().setCredentialsProvider(FixedCredentialsProvider.create(credentials)).build();
 	}
 
@@ -45,9 +47,9 @@ public class STTService {
 
 		byte[] frameBytes = new byte[buffer.remaining()];
 		buffer.get(frameBytes);
-		
+
 		log.info("frameBytes size {}", frameBytes.length);
-		
+
 		// Instantiates a client
 		try (SpeechClient speechClient = SpeechClient.create(settings)) {
 
