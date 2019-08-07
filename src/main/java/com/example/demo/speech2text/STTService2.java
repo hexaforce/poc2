@@ -77,6 +77,8 @@ public class STTService2 {
 	
 	public void execute() throws IOException {
 
+		log.info("STTService2 execute.");
+		
 		try (SpeechClient speechClient = SpeechClient.create(settings)) {
 			clientStream = speechClient.streamingRecognizeCallable().splitCall(responseObserver);
 			RecognitionConfig recognitionConfig = RecognitionConfig.newBuilder()
@@ -89,6 +91,8 @@ public class STTService2 {
 			StreamingRecognizeRequest streamingRecognizeRequest = StreamingRecognizeRequest.newBuilder()
 					.setStreamingConfig(streamingRecognitionConfig).build();
 			clientStream.send(streamingRecognizeRequest);
+
+			log.info("STTService2 clientStream.send");
 			
 			try {
 
@@ -100,6 +104,7 @@ public class STTService2 {
 						referenceToStreamController.cancel();
 						break;
 					} else {
+						log.info("wating....");
 						streamingRecognizeRequest = StreamingRecognizeRequest.newBuilder().setAudioContent(speechQueue.take()).build();
 						log.info("send to SpeachText!!");
 					}
@@ -111,6 +116,10 @@ public class STTService2 {
 			}
 		}
 
+	}
+	
+	public static void main(String[] args) throws IOException {
+		new STTService2(new STTSettings().getSpeechSettings()).execute();
 	}
 	
 }

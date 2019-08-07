@@ -17,8 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class STTSettings {
-	
-	private final String GCP_CREDENTIALS = "/root/.gcp/hexaforce-867578ab2dff.json";
+
+	//private final String GCP_CREDENTIALS = "/root/.gcp/hexaforce-867578ab2dff.json";
+	private final String GCP_CREDENTIALS = "/Users/relics9/.gcp/hexaforce-867578ab2dff.json";
 	private final ArrayList<String> SCOPED = Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform");
 	
 	public SpeechSettings getSpeechSettings() {
