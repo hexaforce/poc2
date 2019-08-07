@@ -16,21 +16,26 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LMSService extends LMSCommon {
 
-	private final LMSOptions streamOps;
-	private final ExecutorService executorService;
-
 	public LMSService(Regions region, AWSCredentialsProvider credentialsProvider, String streamName) throws IOException {
 		super(region, credentialsProvider, streamName);
-		this.streamOps = new LMSOptions(region, credentialsProvider, streamName);
-		this.executorService = Executors.newFixedThreadPool(2);
 	}
 
 	public void execute(String fragmentNumber) throws IOException {
-
+		
+		LMSOptions streamOps = new LMSOptions(getRegion(), getCredentialsProvider(), getStreamName());
 		StartSelector startSelector = new StartSelector().withStartSelectorType(StartSelectorType.FRAGMENT_NUMBER).withAfterFragmentNumber(fragmentNumber);
 		FrameVisitor frameVisitor = FrameVisitor.create(LMSFrameProcessor.create());
-		LMSWorker worker = LMSWorker.create(getRegion(), getCredentialsProvider(), getStreamName(), startSelector, streamOps.getAmazonKinesisVideo(), frameVisitor);
+		
+		LMSWorker worker = LMSWorker.create(
+				getRegion(), 
+				getCredentialsProvider(), 
+				getStreamName(), 
+				startSelector, 
+				streamOps.getAmazonKinesisVideo(), 
+				frameVisitor
+			);
 
+		ExecutorService executorService = Executors.newFixedThreadPool(2);
 		executorService.submit(worker);
 
 		// Wait for the workers to finish.

@@ -27,25 +27,19 @@ public class LMSOptions extends LMSCommon {
 	private static final long SLEEP_PERIOD_MILLIS = TimeUnit.SECONDS.toMillis(3);
 	private static final int DATA_RETENTION_IN_HOURS = 48;
 	
-	private final String streamName;
 	final AmazonKinesisVideo amazonKinesisVideo;
 
 	public LMSOptions(Regions region, AWSCredentialsProvider credentialsProvider, String streamName) {
 		super(region, credentialsProvider, streamName);
-		this.streamName = streamName;
 		final AmazonKinesisVideoClientBuilder builder = AmazonKinesisVideoClientBuilder.standard();
 		configureClient(builder);
 		this.amazonKinesisVideo = builder.build();
 	}
-
-	/**
-	 * If the stream exists delete it and then recreate it. Otherwise just create
-	 * the stream.
-	 */
-	public void recreateStreamIfNecessary() throws InterruptedException {
-		deleteStreamIfPresent();
+	
+	public void createStream() throws InterruptedException {
 		// create the stream.
-		amazonKinesisVideo.createStream(new CreateStreamRequest().withStreamName(streamName).withDataRetentionInHours(DATA_RETENTION_IN_HOURS).withMediaType("video/h264"));
+		CreateStreamRequest request = new CreateStreamRequest().withStreamName(streamName).withDataRetentionInHours(DATA_RETENTION_IN_HOURS).withMediaType("video/h264");
+		amazonKinesisVideo.createStream(request);
 		log.info("CreateStream called for stream {}", streamName);
 		// wait for stream to become active.
 		final Optional<StreamInfo> createdStreamInfo = waitForStateToMatch(s -> s.isPresent() && "ACTIVE".equals(s.get().getStatus()));
@@ -54,20 +48,21 @@ public class LMSOptions extends LMSCommon {
 		Validate.isTrue(createdStreamInfo.get().getDataRetentionInHours() == DATA_RETENTION_IN_HOURS);
 		log.info("Stream {} created ARN {}", streamName, createdStreamInfo.get().getStreamARN());
 	}
+	
+	/**
+	 * If the stream exists delete it and then recreate it. Otherwise just create
+	 * the stream.
+	 */
+	public void recreateStreamIfNecessary() throws InterruptedException {
+		deleteStreamIfPresent();
+		createStream();
+	}
 
 	public void createStreamIfNotExist() throws InterruptedException {
 		final Optional<StreamInfo> streamInfo = getStreamInfo();
 		log.info("Stream {} exists {}", streamName, streamInfo.isPresent());
 		if (!streamInfo.isPresent()) {
-			// create the stream.
-			amazonKinesisVideo.createStream(new CreateStreamRequest().withStreamName(streamName).withDataRetentionInHours(DATA_RETENTION_IN_HOURS).withMediaType("video/h264"));
-			log.info("CreateStream called for stream {}", streamName);
-			// wait for stream to become active.
-			final Optional<StreamInfo> createdStreamInfo = waitForStateToMatch(s -> s.isPresent() && "ACTIVE".equals(s.get().getStatus()));
-			// some basic validations on the response of the create stream
-			Validate.isTrue(createdStreamInfo.isPresent());
-			Validate.isTrue(createdStreamInfo.get().getDataRetentionInHours() == DATA_RETENTION_IN_HOURS);
-			log.info("Stream {} created ARN {}", streamName, createdStreamInfo.get().getStreamARN());
+			createStream();
 		}
 	}
 
@@ -76,8 +71,10 @@ public class LMSOptions extends LMSCommon {
 		log.info("Stream {} exists {}", streamName, streamInfo.isPresent());
 		if (streamInfo.isPresent()) {
 			// Delete the stream
-			amazonKinesisVideo.deleteStream(new DeleteStreamRequest().withStreamARN(streamInfo.get().getStreamARN()));
-			log.info("DeleteStream called for stream {} ARN {} ", streamName, streamInfo.get().getStreamARN());
+			String streamARN = streamInfo.get().getStreamARN();
+			DeleteStreamRequest request = new DeleteStreamRequest().withStreamARN(streamARN);
+			amazonKinesisVideo.deleteStream(request);
+			log.info("DeleteStream called for stream {} ARN {} ", streamName, streamARN);
 			// Wait for stream to be deleted
 			waitForStateToMatch(s -> !s.isPresent());
 			log.info("Stream {} deleted", streamName);
@@ -97,7 +94,8 @@ public class LMSOptions extends LMSCommon {
 
 	private Optional<StreamInfo> getStreamInfo() {
 		try {
-			return Optional.ofNullable(amazonKinesisVideo.describeStream(new DescribeStreamRequest().withStreamName(streamName)).getStreamInfo());
+			DescribeStreamRequest request = new DescribeStreamRequest().withStreamName(streamName);
+			return Optional.ofNullable(amazonKinesisVideo.describeStream(request).getStreamInfo());
 		} catch (ResourceNotFoundException e) {
 			return Optional.empty();
 		}

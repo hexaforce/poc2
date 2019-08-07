@@ -1,7 +1,6 @@
 package com.example.demo.livemediastreams;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Optional;
 
 import com.amazonaws.kinesisvideo.parser.mkv.Frame;
@@ -10,13 +9,17 @@ import com.amazonaws.kinesisvideo.parser.utilities.FragmentMetadata;
 import com.amazonaws.kinesisvideo.parser.utilities.FragmentMetadataVisitor;
 import com.amazonaws.kinesisvideo.parser.utilities.MkvTrackMetadata;
 import com.example.demo.speech2text.STTService2;
+import com.example.demo.speech2text.STTSettings;
+import com.google.protobuf.ByteString;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class LMSFrameProcessor implements com.amazonaws.kinesisvideo.parser.utilities.FrameVisitor.FrameProcessor {
 
+	private final STTService2 speechtotext;
 	protected LMSFrameProcessor() {
+		this.speechtotext = new STTService2(new STTSettings().getSpeechSettings());
 	}
 
 	public static LMSFrameProcessor create() {
@@ -40,19 +43,13 @@ public class LMSFrameProcessor implements com.amazonaws.kinesisvideo.parser.util
 		}
 	}
 
-	private String toCloudCpeech(Frame frame) {
-		try {
-//			String result = new STTService(frame.getFrameData()).execute();
-//			log.info(result);
-//			return result;
-			new STTService2().execute(frame.getFrameData());
-			return "";
-		} catch (FileNotFoundException e) {
-			log.error("toCloudCpeech FileNotFoundException", e);
-		} catch (IOException e) {
-			log.error("toCloudCpeech IOException", e);
-		}
-		return null;
+	private void toCloudCpeech(Frame frame) {
+		ByteBuffer byteBuffer = frame.getFrameData();
+		byte[] frameBytes = new byte[byteBuffer.remaining()];
+		byteBuffer.get(frameBytes);
+		ByteString byteString = ByteString.copyFrom(frameBytes);
+		log.info("toCloudCpeech");
+		speechtotext.send(byteString);
 	}
 
 }

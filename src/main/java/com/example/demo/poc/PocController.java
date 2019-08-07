@@ -18,27 +18,27 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestController
 @RequestMapping("/poc")
-public class AutomaticSpeechRecognitionController {
+public class PocController {
 
 //    @Autowired
 //    ExampleService exampleService;
 
 	@ResponseBody
 	@PostMapping("/nul")
-	public NaturalLanguageUnderstandingResponse nul(@RequestBody NaturalLanguageUnderstandingRequest request) {
+	public PocResponse nul(@RequestBody PocRequest request) {
 		try {
-			
+			request.getContactId();
 			Regions regions = Regions.AP_NORTHEAST_1;
 			AWSCredentialsProvider credentials = AmazonKinesisVideoClientBuilder.standard().getCredentials();
 			String streamName = request.getStreamARN().split("/")[1];
 			String fragmentNumber = request.getStartFragmentNumber();
-
 			log.info(request.toString());
 			new LMSService(regions, credentials, streamName).execute(fragmentNumber);
 		} catch (IOException e) {
 			log.error("NaturalLanguageUnderstanding", e);
+			return new PocResponse(ResponseStatus.Error.name());
 		}
-		return new NaturalLanguageUnderstandingResponse("Thanks For Posting!!!");
+		return new PocResponse(ResponseStatus.Accept.name());
 	}
 
 }

@@ -5,6 +5,6 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class NaturalLanguageUnderstandingResponse {
-	private String VoiceText;
+public class PocResponse {
+	private String status;
 }

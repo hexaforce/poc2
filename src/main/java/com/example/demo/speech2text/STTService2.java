@@ -1,19 +1,13 @@
 package com.example.demo.speech2text;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
-import org.springframework.util.ResourceUtils;
-
-import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.gax.rpc.ClientStream;
 import com.google.api.gax.rpc.ResponseObserver;
 import com.google.api.gax.rpc.StreamController;
-import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.speech.v1.RecognitionConfig;
 import com.google.cloud.speech.v1.SpeechClient;
 import com.google.cloud.speech.v1.SpeechRecognitionAlternative;
@@ -22,31 +16,32 @@ import com.google.cloud.speech.v1.StreamingRecognitionConfig;
 import com.google.cloud.speech.v1.StreamingRecognitionResult;
 import com.google.cloud.speech.v1.StreamingRecognizeRequest;
 import com.google.cloud.speech.v1.StreamingRecognizeResponse;
-import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class STTService2 {
-
-	private final String GCP_CREDENTIALS = "/root/.gcp/hexaforce-867578ab2dff.json";
-	private final ArrayList<String> SCOPED = Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform");
 
 	private final String LANG_CODE = "ja-JP";
 	private final int SAMPLE_RATE = 8000;// 16000;
 
 	private final SpeechSettings settings;
 
-	public STTService2() throws FileNotFoundException, IOException {
-
-		// Cloud Speech-to-Text credentials
-		InputStream file = new FileInputStream(ResourceUtils.getFile(GCP_CREDENTIALS));
-		GoogleCredentials credentials = GoogleCredentials.fromStream(file).createScoped(SCOPED);
-
-		FixedCredentialsProvider provider = FixedCredentialsProvider.create(credentials);
-		this.settings = SpeechSettings.newBuilder().setCredentialsProvider(provider).build();
-
+	public STTService2(SpeechSettings settings){
+		this.settings = settings;
+	}
+	
+	@Setter
+	private boolean STOP = false;
+	private static volatile BlockingQueue<ByteString> speechQueue = new LinkedBlockingQueue<ByteString>();
+	public void send(ByteString speech) {
+		try {
+			speechQueue.put(speech);
+		} catch (InterruptedException e) {
+			log.error("InterruptedException caught: ", e);
+		}
 	}
 
 	private StreamController referenceToStreamController;
@@ -64,10 +59,10 @@ public class STTService2 {
 			StreamingRecognitionResult streamingRecognitionResult = response.getResultsList().get(0);
 			SpeechRecognitionAlternative speechRecognitionAlternative = streamingRecognitionResult.getAlternativesList().get(0);
 			log.info("Transcript: {} Confidence: {}",speechRecognitionAlternative.getTranscript(), speechRecognitionAlternative.getConfidence());
-			
 		}
 
 		public void onComplete() {
+			log.info("onComplete");
 		}
 
 		public void onError(Throwable t) {
@@ -78,12 +73,10 @@ public class STTService2 {
 
 	};
 
-	public void execute(ByteBuffer buffer) throws IOException {
+	private static final int STREAMING_LIMIT = 290000; // ~5 minutes
+	
+	public void execute() throws IOException {
 
-		byte[] frameBytes = new byte[buffer.remaining()];
-		buffer.get(frameBytes);
-		ByteString byteString = ByteString.copyFrom(frameBytes);
-		
 		try (SpeechClient speechClient = SpeechClient.create(settings)) {
 			clientStream = speechClient.streamingRecognizeCallable().splitCall(responseObserver);
 			RecognitionConfig recognitionConfig = RecognitionConfig.newBuilder()
@@ -94,10 +87,29 @@ public class STTService2 {
 					.setConfig(recognitionConfig)
 					.setInterimResults(true).build();
 			StreamingRecognizeRequest streamingRecognizeRequest = StreamingRecognizeRequest.newBuilder()
-					.setStreamingConfig(streamingRecognitionConfig).setAudioContent(byteString).build();
+					.setStreamingConfig(streamingRecognitionConfig).build();
 			clientStream.send(streamingRecognizeRequest);
+			
+			try {
+
+				long startTime = System.currentTimeMillis();
+				while (true) {
+					long estimatedTime = System.currentTimeMillis() - startTime;
+					if (STOP || estimatedTime >= STREAMING_LIMIT) {
+						clientStream.closeSend();
+						referenceToStreamController.cancel();
+						break;
+					} else {
+						streamingRecognizeRequest = StreamingRecognizeRequest.newBuilder().setAudioContent(speechQueue.take()).build();
+					}
+					clientStream.send(streamingRecognizeRequest);
+				}
+
+			} catch (Exception e) {
+				log.error("Exception caught: ", e);
+			}
 		}
 
 	}
-
+	
 }
