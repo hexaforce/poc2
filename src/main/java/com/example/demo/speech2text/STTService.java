@@ -28,9 +28,11 @@ public class STTService {
 	}
 	
 	public String execute(ByteString audioBytes) throws IOException {
+		log.info("execute1");
 		
 		// Instantiates a client
 		try (SpeechClient speechClient = SpeechClient.create(settings)) {
+			log.info("execute2");
 
 			// Builds the sync recognize request
 			RecognitionConfig config = RecognitionConfig.newBuilder().setEncoding(AudioEncoding.LINEAR16).setSampleRateHertz(SAMPLE_RATE).setLanguageCode(LANG_CODE).build();
@@ -38,9 +40,11 @@ public class STTService {
 
 			// Performs speech recognition on the audio file
 			RecognizeResponse response = speechClient.recognize(config, audio);
+			log.info("execute3");
 			List<SpeechRecognitionResult> results = response.getResultsList();
 
 			for (SpeechRecognitionResult result : results) {
+				log.info("execute4");
 				// There can be several alternative transcripts for a given chunk of speech.
 				// Just use the first (most likely) one here.
 				for (SpeechRecognitionAlternative alternative : result.getAlternativesList()) {
@@ -50,6 +54,7 @@ public class STTService {
 			}
 		}
 
+		log.info("execute5");
 		return null;
 
 	}
