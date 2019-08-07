@@ -58,7 +58,7 @@ public class STTService2 {
 			responses.add(response);
 			StreamingRecognitionResult streamingRecognitionResult = response.getResultsList().get(0);
 			SpeechRecognitionAlternative speechRecognitionAlternative = streamingRecognitionResult.getAlternativesList().get(0);
-			log.info("Transcript: {} Confidence: {}",speechRecognitionAlternative.getTranscript(), speechRecognitionAlternative.getConfidence());
+			log.info("return from SpeachText!! Transcript: {} Confidence: {}",speechRecognitionAlternative.getTranscript(), speechRecognitionAlternative.getConfidence());
 		}
 
 		public void onComplete() {
@@ -101,6 +101,7 @@ public class STTService2 {
 						break;
 					} else {
 						streamingRecognizeRequest = StreamingRecognizeRequest.newBuilder().setAudioContent(speechQueue.take()).build();
+						log.info("send to SpeachText!!");
 					}
 					clientStream.send(streamingRecognizeRequest);
 				}

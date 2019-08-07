@@ -1,5 +1,6 @@
 package com.example.demo.livemediastreams;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 
@@ -18,24 +19,25 @@ import lombok.extern.slf4j.Slf4j;
 public class LMSFrameProcessor implements com.amazonaws.kinesisvideo.parser.utilities.FrameVisitor.FrameProcessor {
 
 	private final STTService2 speechtotext;
+
 	protected LMSFrameProcessor() {
 		this.speechtotext = new STTService2(new STTSettings().getSpeechSettings());
+		try {
+			this.speechtotext.execute();
+		} catch (IOException e) {
+			log.error("toCloudCpeech IOException", e);
+		}
 	}
 
 	public static LMSFrameProcessor create() {
 		return new LMSFrameProcessor();
 	}
 
-	public void process(Frame frame, 
-			MkvTrackMetadata trackMetadata, 
-			Optional<FragmentMetadata> fragmentMetadata) throws FrameProcessException {
+	public void process(Frame frame, MkvTrackMetadata trackMetadata, Optional<FragmentMetadata> fragmentMetadata) throws FrameProcessException {
 		toCloudCpeech(frame);
 	}
 
-	public void process(Frame frame, 
-			MkvTrackMetadata trackMetadata, 
-			Optional<FragmentMetadata> fragmentMetadata, 
-			Optional<FragmentMetadataVisitor.MkvTagProcessor> tagProcessor) throws FrameProcessException {
+	public void process(Frame frame, MkvTrackMetadata trackMetadata, Optional<FragmentMetadata> fragmentMetadata, Optional<FragmentMetadataVisitor.MkvTagProcessor> tagProcessor) throws FrameProcessException {
 		if (tagProcessor.isPresent()) {
 			toCloudCpeech(frame);
 		} else {
@@ -48,8 +50,8 @@ public class LMSFrameProcessor implements com.amazonaws.kinesisvideo.parser.util
 		byte[] frameBytes = new byte[byteBuffer.remaining()];
 		byteBuffer.get(frameBytes);
 		ByteString byteString = ByteString.copyFrom(frameBytes);
-		log.info("toCloudCpeech");
 		speechtotext.send(byteString);
+
 	}
 
 }
