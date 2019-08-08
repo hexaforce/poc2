@@ -31,13 +31,14 @@ public class STTService2 {
 
 	private final SpeechSettings settings;
 
-	public STTService2(SpeechSettings settings){
+	public STTService2(SpeechSettings settings) {
 		this.settings = settings;
 	}
-	
+
 	@Setter
 	private boolean STOP = false;
 	private static volatile BlockingQueue<ByteString> speechQueue = new LinkedBlockingQueue<ByteString>();
+
 	public void send(ByteString speech) {
 		try {
 			speechQueue.put(speech);
@@ -60,11 +61,10 @@ public class STTService2 {
 			responses.add(response);
 			StreamingRecognitionResult streamingRecognitionResult = response.getResultsList().get(0);
 			SpeechRecognitionAlternative speechRecognitionAlternative = streamingRecognitionResult.getAlternativesList().get(0);
-			log.info("return from SpeachText!! Transcript: {} Confidence: {}",speechRecognitionAlternative.getTranscript(), speechRecognitionAlternative.getConfidence());
+			log.info("return from SpeachText!! Transcript: {} Confidence: {}", speechRecognitionAlternative.getTranscript(), speechRecognitionAlternative.getConfidence());
 
 			PocResponse y = new Okhttp3<PocResponse>("http://aaaa").post("", PocResponse.class);
 			PocResponse z = new Okhttp3<PocResponse>("http://aaaa").post(response, PocResponse.class);
-			
 		}
 
 		public void onComplete() {
@@ -80,26 +80,20 @@ public class STTService2 {
 	};
 
 	private static final int STREAMING_LIMIT = 290000; // ~5 minutes
-	
+
 	public void execute() throws IOException {
 
 		log.info("STTService2 execute.");
-		
+
 		try (SpeechClient speechClient = SpeechClient.create(settings)) {
 			clientStream = speechClient.streamingRecognizeCallable().splitCall(responseObserver);
-			RecognitionConfig recognitionConfig = RecognitionConfig.newBuilder()
-					.setEncoding(RecognitionConfig.AudioEncoding.LINEAR16)
-					.setLanguageCode(LANG_CODE)
-					.setSampleRateHertz(SAMPLE_RATE).build();
-			StreamingRecognitionConfig streamingRecognitionConfig = StreamingRecognitionConfig.newBuilder()
-					.setConfig(recognitionConfig)
-					.setInterimResults(true).build();
-			StreamingRecognizeRequest streamingRecognizeRequest = StreamingRecognizeRequest.newBuilder()
-					.setStreamingConfig(streamingRecognitionConfig).build();
+			RecognitionConfig recognitionConfig = RecognitionConfig.newBuilder().setEncoding(RecognitionConfig.AudioEncoding.LINEAR16).setLanguageCode(LANG_CODE).setSampleRateHertz(SAMPLE_RATE).build();
+			StreamingRecognitionConfig streamingRecognitionConfig = StreamingRecognitionConfig.newBuilder().setConfig(recognitionConfig).setInterimResults(true).build();
+			StreamingRecognizeRequest streamingRecognizeRequest = StreamingRecognizeRequest.newBuilder().setStreamingConfig(streamingRecognitionConfig).build();
 			clientStream.send(streamingRecognizeRequest);
 
 			log.info("STTService2 clientStream.send");
-			
+
 			try {
 
 				long startTime = System.currentTimeMillis();
@@ -123,9 +117,9 @@ public class STTService2 {
 		}
 
 	}
-	
-	public static void main(String[] args) throws IOException {
-		new STTService2(new STTSettings().getSpeechSettings()).execute();
-	}
-	
+
+//	public static void main(String[] args) throws IOException {
+//		new STTService2(new STTSettings().getSpeechSettings()).execute();
+//	}
+
 }

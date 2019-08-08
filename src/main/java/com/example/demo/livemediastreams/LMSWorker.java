@@ -28,7 +28,6 @@ public class LMSWorker extends LMSCommon implements Runnable {
 
 	private LMSWorker(Regions region, AWSCredentialsProvider credentialsProvider, String streamName, StartSelector startSelector, String endPoint, MkvElementVisitor elementVisitor) {
 		super(region, credentialsProvider, streamName);
-
 		EndpointConfiguration config = new AwsClientBuilder.EndpointConfiguration(endPoint, region.getName());
 		AmazonKinesisVideoMediaClientBuilder builder = AmazonKinesisVideoMediaClientBuilder.standard().withEndpointConfiguration(config).withCredentials(getCredentialsProvider());
 		this.videoMedia = builder.build();
@@ -45,19 +44,15 @@ public class LMSWorker extends LMSCommon implements Runnable {
 	@Override
 	public void run() {
 		try {
-
 			GetMediaRequest request = new GetMediaRequest().withStreamName(getStreamName()).withStartSelector(startSelector);
 			GetMediaResult result = videoMedia.getMedia(request);
-
 			InputStreamParserByteSource source = new InputStreamParserByteSource(result.getPayload());
 			StreamingMkvReader mkvStreamReader = StreamingMkvReader.createDefault(source);
-
 			try {
 				mkvStreamReader.apply(this.elementVisitor);
 			} catch (MkvElementVisitException e) {
 				log.error("Exception while accepting visitor {}", e);
 			}
-
 		} catch (Throwable t) {
 			log.error("Failure in GetMediaWorker for streamName {} {}", streamName, t);
 		} finally {

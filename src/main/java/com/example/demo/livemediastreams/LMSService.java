@@ -21,19 +21,13 @@ public class LMSService extends LMSCommon {
 	}
 
 	public void execute(String fragmentNumber) throws IOException {
-		
+
 		LMSOptions streamOps = new LMSOptions(getRegion(), getCredentialsProvider(), getStreamName());
 		StartSelector startSelector = new StartSelector().withStartSelectorType(StartSelectorType.FRAGMENT_NUMBER).withAfterFragmentNumber(fragmentNumber);
 		FrameVisitor frameVisitor = FrameVisitor.create(LMSFrameProcessor.create());
-		
-		LMSWorker worker = LMSWorker.create(
-				getRegion(), 
-				getCredentialsProvider(), 
-				getStreamName(), 
-				startSelector, 
-				streamOps.getAmazonKinesisVideo(), 
-				frameVisitor
-			);
+
+		LMSWorker worker = LMSWorker.create(getRegion(), getCredentialsProvider(), getStreamName(), 
+				startSelector, streamOps.getAmazonKinesisVideo(), frameVisitor);
 
 		ExecutorService executorService = Executors.newFixedThreadPool(2);
 		executorService.submit(worker);
