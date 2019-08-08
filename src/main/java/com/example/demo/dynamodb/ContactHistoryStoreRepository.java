@@ -13,16 +13,16 @@ public class ContactHistoryStoreRepository {
 
 	public void aaa(String table_name, String name, List<String[]> extra_fields) {
 
-		HashMap<String, AttributeValue> item_values = new HashMap<String, AttributeValue>();
+		HashMap<String, AttributeValue> values = new HashMap<String, AttributeValue>();
 
-		item_values.put("Name", AttributeValue.builder().s(name).build());
+		values.put("Name", AttributeValue.builder().s(name).build());
 
 		for (String[] field : extra_fields) {
-			item_values.put(field[0], AttributeValue.builder().s(field[1]).build());
+			values.put(field[0], AttributeValue.builder().s(field[1]).build());
 		}
 
 		DynamoDbClient ddb = DynamoDbClient.create();
-		PutItemRequest request = PutItemRequest.builder().tableName(table_name).item(item_values).build();
+		PutItemRequest request = PutItemRequest.builder().tableName(table_name).item(values).build();
 
 		try {
 			ddb.putItem(request);

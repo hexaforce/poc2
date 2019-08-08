@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import com.example.demo.okhttp3.Okhttp3;
+import com.example.demo.poc.PocResponse;
 import com.google.api.gax.rpc.ClientStream;
 import com.google.api.gax.rpc.ResponseObserver;
 import com.google.api.gax.rpc.StreamController;
@@ -59,6 +61,10 @@ public class STTService2 {
 			StreamingRecognitionResult streamingRecognitionResult = response.getResultsList().get(0);
 			SpeechRecognitionAlternative speechRecognitionAlternative = streamingRecognitionResult.getAlternativesList().get(0);
 			log.info("return from SpeachText!! Transcript: {} Confidence: {}",speechRecognitionAlternative.getTranscript(), speechRecognitionAlternative.getConfidence());
+
+			PocResponse y = new Okhttp3<PocResponse>("http://aaaa").post("", PocResponse.class);
+			PocResponse z = new Okhttp3<PocResponse>("http://aaaa").post(response, PocResponse.class);
+			
 		}
 
 		public void onComplete() {

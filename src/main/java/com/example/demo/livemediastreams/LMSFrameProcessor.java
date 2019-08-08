@@ -20,16 +20,9 @@ import lombok.extern.slf4j.Slf4j;
 public class LMSFrameProcessor implements com.amazonaws.kinesisvideo.parser.utilities.FrameVisitor.FrameProcessor {
 
 	private final STTService speechtotext;
-	// private final STTService2 speechtotext;
 
 	protected LMSFrameProcessor() {
 		this.speechtotext = new STTService(new STTSettings().getSpeechSettings());
-//		this.speechtotext = new STTService2(new STTSettings().getSpeechSettings());
-//		try {
-//			this.speechtotext.execute();
-//		} catch (IOException e) {
-//			log.error("toCloudCpeech IOException", e);
-//		}
 	}
 
 	public static LMSFrameProcessor create() {
@@ -54,11 +47,10 @@ public class LMSFrameProcessor implements com.amazonaws.kinesisvideo.parser.util
 		byteBuffer.get(frameBytes);
 		ByteString byteString = ByteString.copyFrom(frameBytes);
 		try {
-			speechtotext.execute(byteString);
+			log.info("result: {}", speechtotext.execute(byteString));
 		} catch (IOException e) {
 			log.error("toCloudCpeech IOException ", e);
 		}
-//		speechtotext.send(byteString);
 
 	}
 
