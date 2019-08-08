@@ -17,6 +17,11 @@ import okhttp3.Response;
 import okhttp3.logging.HttpLoggingInterceptor;
 import okhttp3.logging.HttpLoggingInterceptor.Level;
 
+/**
+ * @author relics9
+ *
+ * @param <T>
+ */
 @Slf4j
 public class Okhttp3<T> {
 

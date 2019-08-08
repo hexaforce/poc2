@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-
+import lombok.Getter;
 public class ContactHistoryStoreSupport {
 	
 	public enum TableKey {
@@ -20,6 +20,7 @@ public class ContactHistoryStoreSupport {
 		STREAMARN("StreamARN"), 
 		LAMBDAFUNCTIONNAME("LambdaFunctionName");
 		
+		@Getter
 		String field;
 
 		TableKey(String field) {
@@ -28,7 +29,7 @@ public class ContactHistoryStoreSupport {
 		String alias() {
 			return "#" + field;
 		}
-		String val() {
+		String value() {
 			return ":" + field;
 		}
 

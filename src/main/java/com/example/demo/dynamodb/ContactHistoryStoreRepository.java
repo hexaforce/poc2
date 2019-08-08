@@ -62,7 +62,6 @@ public class ContactHistoryStoreRepository extends ContactHistoryStoreSupport {
 		}
 
 		HashMap<String, AttributeValue> item_values = new HashMap<String, AttributeValue>();
-		
 		item_values.put(TableKey.CONTACTID.alias(), S(name));
 
 		for (String[] field : extra_fields) {
@@ -107,7 +106,6 @@ public class ContactHistoryStoreRepository extends ContactHistoryStoreSupport {
 		}
 
 		HashMap<String, AttributeValue> item_key = new HashMap<String, AttributeValue>();
-
 		item_key.put("Name", new AttributeValue(name));
 
 		HashMap<String, AttributeValueUpdate> updated_values = new HashMap<String, AttributeValueUpdate>();
@@ -133,24 +131,27 @@ public class ContactHistoryStoreRepository extends ContactHistoryStoreSupport {
 	public void Query(String[] args) {
 
 		String table_name = args[0];
-		String partition_key_name = args[1];
 		String partition_key_val = args[2];
-		String partition_alias = "#a";
 
 		final AmazonDynamoDB ddb = AmazonDynamoDBClientBuilder.defaultClient();
 
 		// set up an alias for the partition key name in case it's a reserved word
-		HashMap<String, String> attrNameAlias = new HashMap<String, String>();
-		attrNameAlias.put(partition_alias, partition_key_name);
+		HashMap<String, String> a = new HashMap<String, String>();
+		a.put(TableKey.CONTACTID.alias(), TableKey.CONTACTID.getField());
 
 		// set up mapping of the partition name with the value
-		HashMap<String, AttributeValue> attrValues = new HashMap<String, AttributeValue>();
-		attrValues.put(":" + partition_key_name, new AttributeValue().withS(partition_key_val));
-
-		QueryRequest queryReq = new QueryRequest().withTableName(table_name).withKeyConditionExpression(partition_alias + " = :" + partition_key_name).withExpressionAttributeNames(attrNameAlias).withExpressionAttributeValues(attrValues);
-
+		HashMap<String, AttributeValue> v = new HashMap<String, AttributeValue>();
+		v.put(TableKey.CONTACTID.value(), S(partition_key_val));
+		
+		String condition = String.format("%s = %s",TableKey.CONTACTID.alias(),TableKey.CONTACTID.value());
+		
+		QueryRequest queryRequest = new QueryRequest()
+				.withTableName(table_name)
+				.withKeyConditionExpression(condition)
+				.withExpressionAttributeNames(a)
+				.withExpressionAttributeValues(v);
 		try {
-			QueryResult response = ddb.query(queryReq);
+			QueryResult response = ddb.query(queryRequest);
 			System.out.println(response.getCount());
 		} catch (AmazonDynamoDBException e) {
 			System.err.println(e.getErrorMessage());
@@ -167,7 +168,9 @@ public class ContactHistoryStoreRepository extends ContactHistoryStoreSupport {
 		// AmazonDynamoDB client = AmazonDynamoDBClientBuilder.defaultClient();
 
 		// Using custom profile
-		AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().withRegion(Regions.US_EAST_1).withCredentials(new ProfileCredentialsProvider("profile_test")).build();
+		AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()
+				.withRegion(Regions.US_EAST_1)
+				.withCredentials(new ProfileCredentialsProvider("profile_test")).build();
 		DynamoDB dynamoDB = new DynamoDB(client);
 
 		// Check your tables in DDB
@@ -186,7 +189,10 @@ public class ContactHistoryStoreRepository extends ContactHistoryStoreSupport {
 		final HashMap<String, AttributeValue> customerItemKey = new HashMap<String, AttributeValue>();
 		customerItemKey.put(CUSTOMER_PARTITION_KEY, new AttributeValue(customerId));
 
-		ConditionCheck checkItem = new ConditionCheck().withTableName(CUSTOMER_TABLE_NAME).withKey(customerItemKey).withConditionExpression("attribute_exists(" + CUSTOMER_PARTITION_KEY + ")");
+		ConditionCheck checkItem = new ConditionCheck()
+				.withTableName(CUSTOMER_TABLE_NAME)
+				.withKey(customerItemKey)
+				.withConditionExpression("attribute_exists(" + CUSTOMER_PARTITION_KEY + ")");
 
 		System.out.println(gson.toJson(checkItem));
 
@@ -201,9 +207,13 @@ public class ContactHistoryStoreRepository extends ContactHistoryStoreSupport {
 		expressionAttributeValues.put(":new_status", new AttributeValue("SOLD"));
 		expressionAttributeValues.put(":expected_status", new AttributeValue("IN_STOCK"));
 
-		Update markItemSold = new Update().withTableName(PRODUCT_TABLE_NAME).withKey(productItemKey).withUpdateExpression("SET ProductStatus = :new_status") // Status ID that is must inserted in the table before running, and have to set
-																																								// "IN_STOCK"
-				.withExpressionAttributeValues(expressionAttributeValues).withConditionExpression("ProductStatus = :expected_status").withReturnValuesOnConditionCheckFailure(ReturnValuesOnConditionCheckFailure.ALL_OLD);
+		Update markItemSold = new Update()
+				.withTableName(PRODUCT_TABLE_NAME)
+				.withKey(productItemKey)
+				.withUpdateExpression("SET ProductStatus = :new_status") // Status ID that is must inserted in the table before running, and have to set "IN_STOCK"
+				.withExpressionAttributeValues(expressionAttributeValues)
+				.withConditionExpression("ProductStatus = :expected_status")
+				.withReturnValuesOnConditionCheckFailure(ReturnValuesOnConditionCheckFailure.ALL_OLD);
 
 		System.out.println(gson.toJson(markItemSold));
 
@@ -218,14 +228,23 @@ public class ContactHistoryStoreRepository extends ContactHistoryStoreSupport {
 		orderItem.put("OrderStatus", new AttributeValue("CONFIRMED"));
 		orderItem.put("OrderTotal", new AttributeValue("100"));
 
-		Put createOrder = new Put().withTableName(ORDER_TABLE_NAME).withItem(orderItem).withReturnValuesOnConditionCheckFailure(ReturnValuesOnConditionCheckFailure.ALL_OLD).withConditionExpression("attribute_not_exists(" + ORDER_PARTITION_KEY + ")");
+		Put createOrder = new Put()
+				.withTableName(ORDER_TABLE_NAME)
+				.withItem(orderItem)
+				.withReturnValuesOnConditionCheckFailure(ReturnValuesOnConditionCheckFailure.ALL_OLD)
+				.withConditionExpression("attribute_not_exists(" + ORDER_PARTITION_KEY + ")");
 
 		System.out.println(gson.toJson(createOrder));
 
 		// Create a transaction with conditions
-		Collection<TransactWriteItem> actions = Arrays.asList(new TransactWriteItem().withConditionCheck(checkItem), new TransactWriteItem().withPut(createOrder), new TransactWriteItem().withUpdate(markItemSold));
+		Collection<TransactWriteItem> actions = Arrays.asList(
+				new TransactWriteItem().withConditionCheck(checkItem), 
+				new TransactWriteItem().withPut(createOrder), 
+				new TransactWriteItem().withUpdate(markItemSold));
 
-		TransactWriteItemsRequest placeOrderTransaction = new TransactWriteItemsRequest().withTransactItems(actions).withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
+		TransactWriteItemsRequest placeOrderTransaction = new TransactWriteItemsRequest()
+				.withTransactItems(actions)
+				.withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
 
 		// Execute the transaction and process the result.
 		try {
