@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import com.example.demo.okhttp3.Okhttp3;
-import com.example.demo.poc.PocResponse;
 import com.google.api.gax.rpc.ClientStream;
 import com.google.api.gax.rpc.ResponseObserver;
 import com.google.api.gax.rpc.StreamController;
@@ -31,20 +29,12 @@ public class STTService2 {
 
 	private final SpeechSettings settings;
 
-	public STTService2(SpeechSettings settings) {
-		this.settings = settings;
-	}
-
 	@Setter
 	private boolean STOP = false;
-	private static volatile BlockingQueue<ByteString> speechQueue = new LinkedBlockingQueue<ByteString>();
-
-	public void send(ByteString speech) {
-		try {
-			speechQueue.put(speech);
-		} catch (InterruptedException e) {
-			log.error("InterruptedException caught: ", e);
-		}
+	private volatile BlockingQueue<ByteString> speechQueue;
+	public STTService2(SpeechSettings settings) {
+		this.settings = settings;
+		this.speechQueue = new LinkedBlockingQueue<ByteString>();
 	}
 
 	private StreamController referenceToStreamController;
@@ -63,8 +53,8 @@ public class STTService2 {
 			SpeechRecognitionAlternative speechRecognitionAlternative = streamingRecognitionResult.getAlternativesList().get(0);
 			log.info("return from SpeachText!! Transcript: {} Confidence: {}", speechRecognitionAlternative.getTranscript(), speechRecognitionAlternative.getConfidence());
 
-			PocResponse y = new Okhttp3<PocResponse>("http://aaaa").post("", PocResponse.class);
-			PocResponse z = new Okhttp3<PocResponse>("http://aaaa").post(response, PocResponse.class);
+//			PocResponse y = new Okhttp3<PocResponse>("http://aaaa").post("", PocResponse.class);
+//			PocResponse z = new Okhttp3<PocResponse>("http://aaaa").post(response, PocResponse.class);
 		}
 
 		public void onComplete() {
@@ -81,7 +71,7 @@ public class STTService2 {
 
 	private static final int STREAMING_LIMIT = 290000; // ~5 minutes
 
-	public void execute() throws IOException {
+	public void execute(){
 
 		log.info("STTService2 execute.");
 
@@ -114,12 +104,14 @@ public class STTService2 {
 			} catch (Exception e) {
 				log.error("Exception caught: ", e);
 			}
+		} catch (IOException e) {
+			log.error("Exception caught: ", e);
 		}
 
 	}
 
-//	public static void main(String[] args) throws IOException {
-//		new STTService2(new STTSettings().getSpeechSettings()).execute();
-//	}
-
+	public void send(ByteString speech) throws InterruptedException {
+		speechQueue.add(speech);
+	}
+	
 }

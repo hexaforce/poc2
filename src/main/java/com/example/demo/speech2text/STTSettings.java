@@ -18,11 +18,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class STTSettings {
 
-	private final String GCP_CREDENTIALS = "/root/.gcp/hexaforce-867578ab2dff.json";
-	//private final String GCP_CREDENTIALS = "/Users/relics9/.gcp/hexaforce-867578ab2dff.json";
-	private final ArrayList<String> SCOPED = Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform");
-	
-	public SpeechSettings getSpeechSettings() {
+	private final static String GCP_CREDENTIALS = "/root/.gcp/hexaforce-867578ab2dff.json";
+	// private final String GCP_CREDENTIALS = "/Users/relics9/.gcp/hexaforce-867578ab2dff.json";
+	private final static ArrayList<String> SCOPED = Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform");
+
+	public static SpeechSettings getSpeechSettings() {
 		try {
 			// Cloud Speech-to-Text credentials
 			InputStream file = new FileInputStream(ResourceUtils.getFile(GCP_CREDENTIALS));
@@ -36,4 +36,11 @@ public class STTSettings {
 		}
 		return null;
 	}
+
+	public static STTService2 create() {
+		STTService2 service = new STTService2(getSpeechSettings());
+		service.execute();
+		return service;
+	}
+
 }

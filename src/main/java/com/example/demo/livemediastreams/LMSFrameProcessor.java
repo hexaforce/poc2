@@ -1,6 +1,5 @@
 package com.example.demo.livemediastreams;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 
@@ -9,8 +8,7 @@ import com.amazonaws.kinesisvideo.parser.mkv.FrameProcessException;
 import com.amazonaws.kinesisvideo.parser.utilities.FragmentMetadata;
 import com.amazonaws.kinesisvideo.parser.utilities.FragmentMetadataVisitor;
 import com.amazonaws.kinesisvideo.parser.utilities.MkvTrackMetadata;
-import com.example.demo.speech2text.STTService;
-//import com.example.demo.speech2text.STTService2;
+import com.example.demo.speech2text.STTService2;
 import com.example.demo.speech2text.STTSettings;
 import com.google.protobuf.ByteString;
 
@@ -19,10 +17,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LMSFrameProcessor implements com.amazonaws.kinesisvideo.parser.utilities.FrameVisitor.FrameProcessor {
 
-	private final STTService speechtotext;
+	private final STTService2 speechtotext;
 
 	protected LMSFrameProcessor() {
-		this.speechtotext = new STTService(new STTSettings().getSpeechSettings());
+		this.speechtotext = STTSettings.create();
 	}
 
 	public static LMSFrameProcessor create() {
@@ -47,10 +45,15 @@ public class LMSFrameProcessor implements com.amazonaws.kinesisvideo.parser.util
 		byteBuffer.get(frameBytes);
 		ByteString byteString = ByteString.copyFrom(frameBytes);
 		try {
-			log.info("result: {}", speechtotext.execute(byteString));
-		} catch (IOException e) {
-			log.error("toCloudCpeech IOException ", e);
+			speechtotext.send(byteString);
+		} catch (InterruptedException e) {
+			log.error("toCloudCpeech InterruptedException ", e);
 		}
+//		try {
+//			log.info("result: {}", speechtotext.execute(byteString));
+//		} catch (IOException e) {
+//			log.error("toCloudCpeech IOException ", e);
+//		}
 
 	}
 

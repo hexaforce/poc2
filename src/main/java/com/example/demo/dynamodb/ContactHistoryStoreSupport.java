@@ -5,14 +5,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
-
-import com.amazonaws.services.dynamodbv2.model.AttributeAction;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.AttributeValueUpdate;
 
 
-public class ContactHistoryStoreSupport {
+public class ContactHistoryStoreSupport extends BaseSupport {
 
 	public enum Key {
 
@@ -23,7 +19,7 @@ public class ContactHistoryStoreSupport {
 		STARTTIMESTAMP("StartTimestamp"), 
 		STREAMARN("StreamARN"), 
 		LAMBDAFUNCTIONNAME("LambdaFunctionName");
-		
+
 		private String field;
 
 		Key(String field) {
@@ -68,54 +64,34 @@ public class ContactHistoryStoreSupport {
 	}
 
 	protected Map<String, AttributeValue> marshal(ContactHistoryStore contactHistoryStore) {
-
-		return null;
+		Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
+		item.put(Key.CONTACTID.field(), S(contactHistoryStore.getContactId()));
+		item.put(Key.CUSTOMERADDRESS.field(), S(contactHistoryStore.getCustomerAddress()));
+		item.put(Key.SYSTEMADDRESS.field(), S(contactHistoryStore.getSystemAddress()));
+		item.put(Key.STARTFRAGMENTNUMBER.field(), S(contactHistoryStore.getStartFragmentNumber()));
+		item.put(Key.STARTTIMESTAMP.field(), N(contactHistoryStore.getStartTimestamp()));
+		item.put(Key.STREAMARN.field(), S(contactHistoryStore.getStreamARN()));
+		item.put(Key.LAMBDAFUNCTIONNAME.field(), S(contactHistoryStore.getLambdaFunctionName()));
+		return item;
 	}
-
-	protected ContactHistoryStore unmarshal(Map<String, AttributeValue> itme) {
-		return null;
+	
+	protected ContactHistoryStore unmarshal(Map<String, AttributeValue> item) {
+		return ContactHistoryStore.builder()
+				.ContactId(item.get(Key.CONTACTID.field()).getS())
+				.CustomerAddress(item.get(Key.CUSTOMERADDRESS.field()).getS())
+				.SystemAddress(item.get(Key.SYSTEMADDRESS.field()).getS())
+				.StartTimestamp(Long.parseLong(item.get(Key.STARTTIMESTAMP.field()).getN()))
+				.StreamARN(item.get(Key.STREAMARN.field()).getS())
+				.LambdaFunctionName(item.get(Key.LAMBDAFUNCTIONNAME.field()).getS())
+				.build();
 	}
 
 	protected List<Map<String, AttributeValue>> marshals(List<ContactHistoryStore> contactHistoryStores) {
 		return contactHistoryStores.stream().map(x -> marshal(x)).collect(Collectors.toList());
 	}
 
-	protected List<ContactHistoryStore> unmarshals(List<Map<String, AttributeValue>> itmes) {
-		return itmes.stream().map(x -> unmarshal(x)).collect(Collectors.toList());
-	}
-
-	protected AttributeValue S(String s) {
-		if (StringUtils.isEmpty(s))
-			return new AttributeValue().withS(s);
-		return new AttributeValue().withS("");
-	}
-
-	protected AttributeValue N(int n) {
-		return new AttributeValue().withN(String.valueOf(n));
-	}
-
-	protected AttributeValue N(long n) {
-		return new AttributeValue().withN(String.valueOf(n));
-	}
-
-	protected AttributeValue BOOL(boolean bool) {
-		return new AttributeValue().withBOOL(bool);
-	}
-
-	protected AttributeValueUpdate UpS(String s, AttributeAction action) {
-		return new AttributeValueUpdate(S(s), action);
-	}
-
-	protected AttributeValueUpdate UpN(int n, AttributeAction action) {
-		return new AttributeValueUpdate(N(n), action);
-	}
-
-	protected AttributeValueUpdate UpN(long n, AttributeAction action) {
-		return new AttributeValueUpdate(N(n), action);
-	}
-
-	protected AttributeValueUpdate UpBOOL(boolean bool, AttributeAction action) {
-		return new AttributeValueUpdate(BOOL(bool), action);
+	protected List<ContactHistoryStore> unmarshals(List<Map<String, AttributeValue>> items) {
+		return items.stream().map(x -> unmarshal(x)).collect(Collectors.toList());
 	}
 
 }
