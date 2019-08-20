@@ -26,6 +26,9 @@ public class STTService2 {
 
 	private final String LANG_CODE = "ja-JP";
 	private final int SAMPLE_RATE = 8000;// 16000;
+	private final RecognitionConfig recognitionConfig = RecognitionConfig.newBuilder().setEncoding(RecognitionConfig.AudioEncoding.LINEAR16).setLanguageCode(LANG_CODE).setSampleRateHertz(SAMPLE_RATE).build();
+
+	private static final int STREAMING_LIMIT = 290000; // ~5 minutes
 
 	private final SpeechSettings settings;
 
@@ -48,6 +51,7 @@ public class STTService2 {
 		}
 
 		public void onResponse(StreamingRecognizeResponse response) {
+			
 			responses.add(response);
 			StreamingRecognitionResult streamingRecognitionResult = response.getResultsList().get(0);
 			SpeechRecognitionAlternative speechRecognitionAlternative = streamingRecognitionResult.getAlternativesList().get(0);
@@ -55,6 +59,7 @@ public class STTService2 {
 
 //			PocResponse y = new Okhttp3<PocResponse>("http://aaaa").post("", PocResponse.class);
 //			PocResponse z = new Okhttp3<PocResponse>("http://aaaa").post(response, PocResponse.class);
+			
 		}
 
 		public void onComplete() {
@@ -68,43 +73,41 @@ public class STTService2 {
 		}
 
 	};
-
-	private static final int STREAMING_LIMIT = 290000; // ~5 minutes
-
+	
+	
 	public void execute(){
 
 		log.info("STTService2 execute.");
 
 		try (SpeechClient speechClient = SpeechClient.create(settings)) {
 			clientStream = speechClient.streamingRecognizeCallable().splitCall(responseObserver);
-			RecognitionConfig recognitionConfig = RecognitionConfig.newBuilder().setEncoding(RecognitionConfig.AudioEncoding.LINEAR16).setLanguageCode(LANG_CODE).setSampleRateHertz(SAMPLE_RATE).build();
 			StreamingRecognitionConfig streamingRecognitionConfig = StreamingRecognitionConfig.newBuilder().setConfig(recognitionConfig).setInterimResults(true).build();
 			StreamingRecognizeRequest streamingRecognizeRequest = StreamingRecognizeRequest.newBuilder().setStreamingConfig(streamingRecognitionConfig).build();
 			clientStream.send(streamingRecognizeRequest);
 
 			log.info("STTService2 clientStream.send");
 
-			try {
-
-				long startTime = System.currentTimeMillis();
-				while (true) {
-					long estimatedTime = System.currentTimeMillis() - startTime;
-					if (STOP || estimatedTime >= STREAMING_LIMIT) {
-						clientStream.closeSend();
-						referenceToStreamController.cancel();
-						break;
-					} else {
-						log.info("wating....");
-						streamingRecognizeRequest = StreamingRecognizeRequest.newBuilder().setAudioContent(speechQueue.take()).build();
-						log.info("send to SpeachText!!");
-					}
-					clientStream.send(streamingRecognizeRequest);
+			long startTime = System.currentTimeMillis();
+			
+			while (true) {
+				
+				long estimatedTime = System.currentTimeMillis() - startTime;
+				
+				if (STOP || estimatedTime >= STREAMING_LIMIT) {
+					clientStream.closeSend();
+					referenceToStreamController.cancel();
+					break;
+				} else {
+					log.info("wating....");
+					streamingRecognizeRequest = StreamingRecognizeRequest.newBuilder().setAudioContent(speechQueue.take()).build();
+					log.info("send to SpeachText!!");
 				}
-
-			} catch (Exception e) {
-				log.error("Exception caught: ", e);
+				
+				clientStream.send(streamingRecognizeRequest);
+				
 			}
-		} catch (IOException e) {
+			
+		} catch (IOException | InterruptedException e) {
 			log.error("Exception caught: ", e);
 		}
 

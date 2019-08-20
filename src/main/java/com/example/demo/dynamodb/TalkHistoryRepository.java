@@ -9,10 +9,13 @@ import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public class TalkHistoryRepository extends TalkHistorySupport {
+
+	private final Regions regions = Regions.AP_NORTHEAST_1;
+	
 	
 	private final String tableName;
 	private final AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()
-			.withRegion(Regions.AP_NORTHEAST_1)
+			.withRegion(regions)
 			.withCredentials(new ProfileCredentialsProvider("profile_test"))
 			.build();
 

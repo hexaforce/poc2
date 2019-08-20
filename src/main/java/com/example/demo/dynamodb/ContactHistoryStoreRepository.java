@@ -25,12 +25,16 @@ import com.amazonaws.services.dynamodbv2.model.TransactionCanceledException;
 import com.amazonaws.services.dynamodbv2.model.Update;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @AllArgsConstructor
 public class ContactHistoryStoreRepository extends ContactHistoryStoreSupport {
 
 	private final String tableName;
-	private final AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().withRegion(Regions.AP_NORTHEAST_1).withCredentials(new ProfileCredentialsProvider("profile_test")).build();
+	private final AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()
+			.withRegion(Regions.AP_NORTHEAST_1)
+			.withCredentials(new ProfileCredentialsProvider("profile_test")).build();
 
 	public void PutItem(ContactHistoryStore contactHistoryStore) {
 		client.putItem(tableName, marshal(contactHistoryStore));
@@ -80,7 +84,7 @@ public class ContactHistoryStoreRepository extends ContactHistoryStoreSupport {
 				.withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
 		try {
 			client.transactWriteItems(placeOrderTransaction);
-			System.out.println("Transaction Successful");
+			log.info("Transaction Successful");
 		} catch (ResourceNotFoundException rnf) {
 			System.err.println("One of the table involved in the transaction is not found" + rnf.getMessage());
 		} catch (InternalServerErrorException ise) {

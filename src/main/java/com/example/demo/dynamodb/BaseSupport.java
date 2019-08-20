@@ -11,7 +11,7 @@ public class BaseSupport {
 	protected AttributeValue S(String s) {
 		if (StringUtils.isEmpty(s))
 			return new AttributeValue().withS(s);
-		return new AttributeValue().withS("");
+		return new AttributeValue().withS("null");
 	}
 
 	protected AttributeValue N(int n) {

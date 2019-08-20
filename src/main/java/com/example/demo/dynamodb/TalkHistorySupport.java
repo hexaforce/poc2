@@ -45,4 +45,5 @@ public class TalkHistorySupport extends BaseSupport {
 				.ContactId(item.get(Key.CONTACTID.field()).getS())
 				.build();
 	}
+	
 }

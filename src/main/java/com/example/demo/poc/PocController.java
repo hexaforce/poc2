@@ -22,14 +22,13 @@ public class PocController {
 
 //    @Autowired
 //    ExampleService exampleService;
+	final Regions regions = Regions.AP_NORTHEAST_1;
+	final AWSCredentialsProvider credentials = AmazonKinesisVideoClientBuilder.standard().getCredentials();
 
 	@ResponseBody
 	@PostMapping("/nul")
 	public PocResponse nul(@RequestBody PocRequest request) {
 		try {
-			request.getContactId();
-			Regions regions = Regions.AP_NORTHEAST_1;
-			AWSCredentialsProvider credentials = AmazonKinesisVideoClientBuilder.standard().getCredentials();
 			String streamName = request.getStreamARN().split("/")[1];
 			String fragmentNumber = request.getStartFragmentNumber();
 			log.info(request.toString());
@@ -45,9 +44,6 @@ public class PocController {
 	@PostMapping("/nul2")
 	public PocResponse nul2(@RequestBody PocRequest request) {
 		try {
-			request.getContactId();
-			Regions regions = Regions.AP_NORTHEAST_1;
-			AWSCredentialsProvider credentials = AmazonKinesisVideoClientBuilder.standard().getCredentials();
 			String streamName = request.getStreamARN().split("/")[1];
 			String fragmentNumber = request.getStartFragmentNumber();
 			log.info(request.toString());
