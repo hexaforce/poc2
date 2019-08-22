@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.kinesisvideo.AmazonKinesisVideoClientBuilder;
-import com.example.demo.livemediastreams.LMSService;
+import com.example.demo.livemediastreams.LiveMediaStreamService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,7 +32,7 @@ public class PocController {
 			String streamName = request.getStreamARN().split("/")[1];
 			String fragmentNumber = request.getStartFragmentNumber();
 			log.info(request.toString());
-			new LMSService(regions, credentials, streamName).execute(fragmentNumber);
+			new LiveMediaStreamService(regions, credentials, streamName).execute(fragmentNumber);
 		} catch (IOException e) {
 			log.error("NaturalLanguageUnderstanding", e);
 			return new PocResponse(ResponseStatus.Error.name());
@@ -47,7 +47,7 @@ public class PocController {
 			String streamName = request.getStreamARN().split("/")[1];
 			String fragmentNumber = request.getStartFragmentNumber();
 			log.info(request.toString());
-			new LMSService(regions, credentials, streamName).execute(fragmentNumber);
+			new LiveMediaStreamService(regions, credentials, streamName).execute(fragmentNumber);
 		} catch (IOException e) {
 			log.error("NaturalLanguageUnderstanding", e);
 			return new PocResponse(ResponseStatus.Error.name());

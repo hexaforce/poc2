@@ -2,59 +2,51 @@ package com.example.demo.livemediastreams;
 
 import java.nio.ByteBuffer;
 import java.util.Optional;
+import java.util.concurrent.BlockingQueue;
 
 import com.amazonaws.kinesisvideo.parser.mkv.Frame;
 import com.amazonaws.kinesisvideo.parser.mkv.FrameProcessException;
 import com.amazonaws.kinesisvideo.parser.utilities.FragmentMetadata;
 import com.amazonaws.kinesisvideo.parser.utilities.FragmentMetadataVisitor;
 import com.amazonaws.kinesisvideo.parser.utilities.MkvTrackMetadata;
-import com.example.demo.speech2text.STTService2;
-import com.example.demo.speech2text.STTSettings;
 import com.google.protobuf.ByteString;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class LMSFrameProcessor implements com.amazonaws.kinesisvideo.parser.utilities.FrameVisitor.FrameProcessor {
+public class AudioFrameProcessor implements com.amazonaws.kinesisvideo.parser.utilities.FrameVisitor.FrameProcessor {
 
-	private final STTService2 speechtotext;
-
-	protected LMSFrameProcessor() {
-		this.speechtotext = STTSettings.create();
+	protected AudioFrameProcessor(BlockingQueue<ByteString> audioQueue) {
+		this.audioQueue = audioQueue;
 	}
 
-	public static LMSFrameProcessor create() {
-		return new LMSFrameProcessor();
+	private final BlockingQueue<ByteString> audioQueue;
+
+	public static AudioFrameProcessor create(BlockingQueue<ByteString> audioQueue) {
+		return new AudioFrameProcessor(audioQueue);
 	}
 
 	public void process(Frame frame, MkvTrackMetadata trackMetadata, Optional<FragmentMetadata> fragmentMetadata) throws FrameProcessException {
-		toCloudCpeech(frame);
+		addQueue(frame);
 	}
 
 	public void process(Frame frame, MkvTrackMetadata trackMetadata, Optional<FragmentMetadata> fragmentMetadata, Optional<FragmentMetadataVisitor.MkvTagProcessor> tagProcessor) throws FrameProcessException {
 		if (tagProcessor.isPresent()) {
-			toCloudCpeech(frame);
+			addQueue(frame);
 		} else {
 			process(frame, trackMetadata, fragmentMetadata);
 		}
 	}
 
-	private void toCloudCpeech(Frame frame) {
+	private void addQueue(Frame frame) {
 		ByteBuffer byteBuffer = frame.getFrameData();
 		byte[] frameBytes = new byte[byteBuffer.remaining()];
 		byteBuffer.get(frameBytes);
-		ByteString byteString = ByteString.copyFrom(frameBytes);
 		try {
-			speechtotext.send(byteString);
+			audioQueue.put(ByteString.copyFrom(frameBytes));
 		} catch (InterruptedException e) {
-			log.error("toCloudCpeech InterruptedException ", e);
+			log.error("addQueue InterruptedException ", e);
 		}
-//		try {
-//			log.info("result: {}", speechtotext.execute(byteString));
-//		} catch (IOException e) {
-//			log.error("toCloudCpeech IOException ", e);
-//		}
-
 	}
 
 }

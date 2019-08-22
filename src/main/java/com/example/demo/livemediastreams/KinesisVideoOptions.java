@@ -22,14 +22,14 @@ import org.apache.commons.lang3.Validate;
 
 @Slf4j
 @Getter
-public class LMSOptions extends LMSCommon {
+public class KinesisVideoOptions extends KinesisCommon {
 
 	private static final long SLEEP_PERIOD_MILLIS = TimeUnit.SECONDS.toMillis(3);
 	private static final int DATA_RETENTION_IN_HOURS = 48;
 	
 	final AmazonKinesisVideo amazonKinesisVideo;
 
-	public LMSOptions(Regions region, AWSCredentialsProvider credentialsProvider, String streamName) {
+	public KinesisVideoOptions(Regions region, AWSCredentialsProvider credentialsProvider, String streamName) {
 		super(region, credentialsProvider, streamName);
 		final AmazonKinesisVideoClientBuilder builder = AmazonKinesisVideoClientBuilder.standard();
 		configureClient(builder);

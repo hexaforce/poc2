@@ -20,13 +20,13 @@ import com.amazonaws.services.kinesisvideo.model.StartSelector;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class LMSWorker extends LMSCommon implements Runnable {
+public class MediaWorker extends KinesisCommon implements Runnable {
 
 	private final AmazonKinesisVideoMedia videoMedia;
 	private final MkvElementVisitor elementVisitor;
 	private final StartSelector startSelector;
 
-	private LMSWorker(Regions region, AWSCredentialsProvider credentialsProvider, String streamName, StartSelector startSelector, String endPoint, MkvElementVisitor elementVisitor) {
+	private MediaWorker(Regions region, AWSCredentialsProvider credentialsProvider, String streamName, StartSelector startSelector, String endPoint, MkvElementVisitor elementVisitor) {
 		super(region, credentialsProvider, streamName);
 		EndpointConfiguration config = new AwsClientBuilder.EndpointConfiguration(endPoint, region.getName());
 		AmazonKinesisVideoMediaClientBuilder builder = AmazonKinesisVideoMediaClientBuilder.standard().withEndpointConfiguration(config).withCredentials(getCredentialsProvider());
@@ -35,10 +35,10 @@ public class LMSWorker extends LMSCommon implements Runnable {
 		this.startSelector = startSelector;
 	}
 
-	public static LMSWorker create(Regions region, AWSCredentialsProvider credentialsProvider, String streamName, StartSelector startSelector, AmazonKinesisVideo amazonKinesisVideo, MkvElementVisitor visitor) {
+	public static MediaWorker create(Regions region, AWSCredentialsProvider credentialsProvider, String streamName, StartSelector startSelector, AmazonKinesisVideo amazonKinesisVideo, MkvElementVisitor visitor) {
 		GetDataEndpointRequest request = new GetDataEndpointRequest().withAPIName(APIName.GET_MEDIA).withStreamName(streamName);
 		String endPoint = amazonKinesisVideo.getDataEndpoint(request).getDataEndpoint();
-		return new LMSWorker(region, credentialsProvider, streamName, startSelector, endPoint, visitor);
+		return new MediaWorker(region, credentialsProvider, streamName, startSelector, endPoint, visitor);
 	}
 
 	@Override

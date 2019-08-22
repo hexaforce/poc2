@@ -14,19 +14,19 @@ import com.amazonaws.services.kinesisvideo.model.StartSelectorType;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class LMSService extends LMSCommon {
+public class LiveMediaStreamService extends KinesisCommon {
 
-	public LMSService(Regions region, AWSCredentialsProvider credentialsProvider, String streamName) throws IOException {
+	public LiveMediaStreamService(Regions region, AWSCredentialsProvider credentialsProvider, String streamName) throws IOException {
 		super(region, credentialsProvider, streamName);
 	}
 
 	public void execute(String fragmentNumber) throws IOException {
 
-		LMSOptions streamOps = new LMSOptions(getRegion(), getCredentialsProvider(), getStreamName());
+		KinesisVideoOptions streamOps = new KinesisVideoOptions(getRegion(), getCredentialsProvider(), getStreamName());
 		StartSelector startSelector = new StartSelector().withStartSelectorType(StartSelectorType.FRAGMENT_NUMBER).withAfterFragmentNumber(fragmentNumber);
-		FrameVisitor frameVisitor = FrameVisitor.create(LMSFrameProcessor.create());
+		FrameVisitor frameVisitor = FrameVisitor.create(AudioFrameProcessor.create());
 
-		LMSWorker worker = LMSWorker.create(getRegion(), getCredentialsProvider(), getStreamName(), 
+		MediaWorker worker = MediaWorker.create(getRegion(), getCredentialsProvider(), getStreamName(), 
 				startSelector, streamOps.getAmazonKinesisVideo(), frameVisitor);
 
 		ExecutorService executorService = Executors.newFixedThreadPool(2);

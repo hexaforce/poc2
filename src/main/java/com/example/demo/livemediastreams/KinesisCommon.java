@@ -10,7 +10,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public abstract class LMSCommon {
+public abstract class KinesisCommon {
 	
 	private final Regions region;
 	private final AWSCredentialsProvider credentialsProvider;
